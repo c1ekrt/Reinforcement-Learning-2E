@@ -26,7 +26,6 @@ class GridMap:
         s_loc = np.array([0,3])
         return b_map, w_map, e_loc, s_loc
 
-
 class GridWorld:
     def __init__(self, policy=0):
         grid_map = GridMap(0)
@@ -75,22 +74,6 @@ class GridWorld:
         return location, max_a
     
     def greedy(self, location):
-        max_a = 0
-        max_q = -1000000
-        policy_with_same_value = []
-        for i in range(0,8):
-            if max_q == self.old_Q[location[0]][location[1]][i]:
-                policy_with_same_value.append(i)
-            elif max_q < self.old_Q[location[0]][location[1]][i]:
-                max_a = i
-                max_q = self.old_Q[location[0]][location[1]][i]
-                policy_with_same_value = [i]
-        if len(policy_with_same_value) > 1:
-            rd = random.randint(0, len(policy_with_same_value)-1)
-            max_a = policy_with_same_value[rd]
-        return location, max_a # S, A | max_a returns a int
-    
-    def Expect_Sarsa_greedy(self, location):
         max_a = 0
         max_q = -1000000
         policy_with_same_value = []
