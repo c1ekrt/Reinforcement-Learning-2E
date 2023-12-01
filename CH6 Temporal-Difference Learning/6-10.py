@@ -164,7 +164,7 @@ class GridWorld:
             self.current_location = self.move(a)
             s_new, a_max = self.greedy(self.current_location)
             s_new_action_expectation = []
-            for i in range(0, 8):
+            for i in range(0, 8): # compare Expectation
                 s_new_action_expectation.append(self.Expected_Sarsa_calculate_expectation(s_new))
             max_expectation = max(s_new_action_expectation)
             self.old_Q[s[0]][s[1]][a] += self.alpha * (-1 + max_expectation-self.fetch_Q(s, a))
@@ -204,7 +204,6 @@ Q.iterate(10000)
 print("training done")
 acc = 0
 for i in range (0,100):
-    Q.run_eval()
     acc+=Q.run_eval()
 print (acc/100)
 print("--------------------------")
@@ -214,7 +213,5 @@ Expected_Sarsa.iterate(10000)
 print("training done")
 acc = 0
 for i in range (0,100):
-    Expected_Sarsa.run_eval()
-    Expected_Sarsa.run_eval()
     acc+=Expected_Sarsa.run_eval()
 print (acc/100)
