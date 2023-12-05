@@ -39,10 +39,9 @@ class GridWorld:
         self.current_location  = grid_map.start_location
         self.valid_move = np.array([[1,1],[0,1],[-1,1],[1,0],[-1,0],[1,-1],[0,-1],[-1,-1]])
         self.Q = np.zeros((self.x_range,self.y_range,len(self.valid_move)))
-        self.old_Q = np.zeros((self.x_range,self.y_range,len(self.valid_move)))
-        self.alpha = 0.20
+        self.alpha = 0.25
         self.reward = -1
-        self.epsilon = 0.02
+        self.epsilon = 0.1
         self.V = np.zeros((self.x_range,self.y_range))
         self.policy = [self.run_Sarsa_epsilon_greedy, self.run_Q_learning_epsilon_greedy, self.run_Expected_Sarsa_epsilon_greedy]
         self.selected_policy = self.policy[policy]
@@ -79,11 +78,11 @@ class GridWorld:
         max_q = -1000000
         policy_with_same_value = []
         for i in range(0,8):
-            if max_q == self.old_Q[location[0]][location[1]][i]:
+            if max_q == self.Q[location[0]][location[1]][i]:
                 policy_with_same_value.append(i)
-            elif max_q < self.old_Q[location[0]][location[1]][i]:
+            elif max_q < self.Q[location[0]][location[1]][i]:
                 max_a = i
-                max_q = self.old_Q[location[0]][location[1]][i]
+                max_q = self.Q[location[0]][location[1]][i]
                 policy_with_same_value = [i]
         if len(policy_with_same_value) > 1:
             rd = random.randint(0, len(policy_with_same_value)-1)
@@ -95,63 +94,58 @@ class GridWorld:
         max_q = -1000000
         policy_with_same_value = []
         for i in range(0,8):
-            if max_q == self.old_Q[location[0]][location[1]][i]:
+            if max_q == self.Q[location[0]][location[1]][i]:
                 policy_with_same_value.append(i)
-            elif max_q < self.old_Q[location[0]][location[1]][i]:
+            elif max_q < self.Q[location[0]][location[1]][i]:
                 max_a = i
-                max_q = self.old_Q[location[0]][location[1]][i]
+                max_q = self.Q[location[0]][location[1]][i]
                 policy_with_same_value = [i]
         non_optimal_action_prob = self.epsilon/8 # 8 is action count
-        optimal_action_prob = 1.0 - self.epsilon + (self.epsilon/len(policy_with_same_value))
+        optimal_action_prob = 1.0 - self.epsilon + (self.epsilon/8)
         # calculate Expectation
         E = 0
         policy_with_same_value_set = set(policy_with_same_value)
         for i in range(0,8):
             if i in policy_with_same_value_set:
-                E += optimal_action_prob * self.old_Q[location[0]][location[1]][i]
+                E += optimal_action_prob * self.Q[location[0]][location[1]][i]
             else :
-                E += non_optimal_action_prob * self.old_Q[location[0]][location[1]][i]
+                E += non_optimal_action_prob * self.Q[location[0]][location[1]][i]
         return E
     
     def fetch_Q(self, s, a):
-        return self.old_Q[s[0]][s[1]][a]
+        return self.Q[s[0]][s[1]][a]
     
         
     def run_Sarsa_epsilon_greedy(self):
         grid_map = GridMap(self.select_map)
-        self.Q = self.old_Q.copy()
         s, a = self.epsilon_greedy(self.current_location, self.epsilon)
         while not (self.current_location == self.end_location).all():
             self.current_location = self.move(a)                    
             s_new, a_new = self.epsilon_greedy(self.current_location, self.epsilon)  # S', A'
-            self.old_Q[s[0]][s[1]][a] += self.alpha * (-1 + self.fetch_Q(s_new, a_new)-self.fetch_Q(s, a))
+            self.Q[s[0]][s[1]][a] += self.alpha * (-1 + self.fetch_Q(s_new, a_new)-self.fetch_Q(s, a))
             s = s_new
             a = a_new
         self.current_location = grid_map.start_location
         
     def run_Q_learning_epsilon_greedy(self):
         grid_map = GridMap(self.select_map)
-        self.Q = self.old_Q.copy()
+        s = 0
         while not (self.current_location == self.end_location).all():
             s, a = self.epsilon_greedy(self.current_location, self.epsilon)  # S, A
             self.current_location = self.move(a)
             s_new, a_max = self.greedy(self.current_location)
-            self.old_Q[s[0]][s[1]][a] += self.alpha * (-1 + self.fetch_Q(s_new, a_max)-self.fetch_Q(s, a))
+            self.Q[s[0]][s[1]][a] += self.alpha * (-1 + self.fetch_Q(s_new, a_max)-self.fetch_Q(s, a))
             s = s_new
         self.current_location = grid_map.start_location
         
     def run_Expected_Sarsa_epsilon_greedy(self):
         grid_map = GridMap(self.select_map)
-        self.Q = self.old_Q.copy()
+        s = 0
         while not (self.current_location == self.end_location).all():
             s, a = self.epsilon_greedy(self.current_location, self.epsilon)  # S, A
             self.current_location = self.move(a)
-            s_new, a_max = self.epsilon_greedy(self.current_location, self.epsilon)
-            s_new_action_expectation = []
-            for i in range(0, 8):
-                s_new_action_expectation.append(self.Expected_Sarsa_calculate_expectation(s_new))
-            max_expectation = max(s_new_action_expectation)
-            self.old_Q[s[0]][s[1]][a] += self.alpha * (-1 + max_expectation-self.fetch_Q(s, a))
+            s_new = self.current_location.copy()
+            self.Q[s[0]][s[1]][a] += self.alpha * (-1 + self.Expected_Sarsa_calculate_expectation(s_new)-self.fetch_Q(s, a))
             s = s_new
         self.current_location = grid_map.start_location
         
@@ -160,8 +154,7 @@ class GridWorld:
         count = 0
         while not (self.current_location == self.end_location).all():
             s, a = self.greedy(self.current_location)
-            self.current_location = self.move(a)   
-            # print(s)                
+            self.current_location = self.move(a)                 
             # time.sleep(0.1)
             count+=1
             if count > 1000:
@@ -172,12 +165,11 @@ class GridWorld:
     def iterate(self, iteration):
         for i in range(0,iteration):
             self.selected_policy()
-        # print(self.Q)
         
 print("--------------------------")
 print("Sarsa:")
 Sarsa = GridWorld(0)
-Sarsa.iterate(20000)
+Sarsa.iterate(80000)
 print("training done")
 acc = 0
 for i in range (0,100): 
@@ -186,7 +178,7 @@ print (acc/100)
 print("--------------------------")
 print("Q-learning:")
 Q = GridWorld(1)
-Q.iterate(20000)
+Q.iterate(80000)
 print("training done")
 acc = 0
 for i in range (0,100):
@@ -195,7 +187,7 @@ print (acc/100)
 print("--------------------------")
 print("Expected_Sarsa:")
 Expected_Sarsa = GridWorld(2)
-Expected_Sarsa.iterate(20000)
+Expected_Sarsa.iterate(80000)
 print("training done")
 acc = 0
 for i in range (0,100):
