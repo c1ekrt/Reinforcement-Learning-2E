@@ -36,7 +36,7 @@ class GridWorld:
         self.y_range = self.blank_map.shape[1]
         self.wind_map = grid_map.wind_map
         self.end_location = grid_map.end_location
-        self.current_location  = grid_map.start_location
+        self.current_location = grid_map.start_location
         self.valid_move = np.array([[1,1],[0,1],[-1,1],[1,0],[-1,0],[1,-1],[0,-1],[-1,-1]])
         self.Q = np.zeros((self.x_range,self.y_range,len(self.valid_move)))
         self.alpha = 0.1
@@ -102,8 +102,6 @@ class GridWorld:
         s, a=self.epsilon_greedy(self.current_location, self.epsilon)
         history.append((s, a))
         while not (self.current_location == self.end_location).all() or tau != T-1 :
-            # time.sleep(1)
-            # print(self.current_location)
             if t < T:
                 self.current_location = self.move(a) # reward = -1
                 s_new = self.current_location
