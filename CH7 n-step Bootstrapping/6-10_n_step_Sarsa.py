@@ -54,7 +54,7 @@ class GridWorld:
         return current_location
     
     def move(self, move_direction):
-        current_location =self.current_location + self.valid_move[move_direction]
+        current_location = self.current_location + self.valid_move[move_direction]
         current_location = self.redirect_location(current_location)
         current_location = self.stochastic_wind(current_location)
         current_location = self.redirect_location(current_location)
