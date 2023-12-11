@@ -9,26 +9,33 @@ Tabular Dyna-Q with Dyna Maze
 
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 class MazeMap:
-    def __init__(self, map_choose):
-        self.maze_map = [self.map_0]
-        self.map_choose = map_choose
+    def __init__(self):
+        self.maze_map = [self.map_1, self.map_2]
         self.start_location = np.array([0,0])
         self.end_location = np.array([0,0])
-        
-    def map_0(self):
-        '''
-        0 = space
-        1 = wall
-        8 = start location
-        9 = end location
-        '''
+
+    
+    def map_1(self): # EX 8.2 blocking maze
         map_layout = np.zeros((9,6))
-        map_wall = [[2,2],[2,3],[2,4],[5,1],[7,3],[7,4],[7,5]]
+        map_wall = [[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2]]
         for loc in map_wall:
             map_layout[loc[0]][loc[1]] = 1
-        self.start_location = np.array([0,3])
+        self.start_location = np.array([3,0])
+        map_layout[self.start_location[0]][self.start_location[1]] = 8
+        self.end_location = np.array([8,5])
+        map_layout[self.end_location[0]][self.end_location[1]] = 9
+        print(map_layout)
+        return map_layout
+    
+    def map_2(self): # EX 8.2 blocking maze map-2
+        map_layout = np.zeros((9,6))
+        map_wall = [[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2]]
+        for loc in map_wall:
+            map_layout[loc[0]][loc[1]] = 1
+        self.start_location = np.array([3,0])
         map_layout[self.start_location[0]][self.start_location[1]] = 8
         self.end_location = np.array([8,5])
         map_layout[self.end_location[0]][self.end_location[1]] = 9
@@ -36,9 +43,10 @@ class MazeMap:
         return map_layout
     
 class DynaMaze:
-    def __init__(self, map_choose=0, n=10):
-        m = MazeMap(map_choose)
-        self.current_map = m.maze_map[m.map_choose]()
+    def __init__(self, n=10):
+        m = MazeMap()
+        self.current_map = m.maze_map[0]()
+        self.next_map = m.maze_map[1]()
         self.Q = np.zeros((9,6,4))
         self.model = dict()
         self.start_location = m.start_location.copy()
@@ -126,14 +134,24 @@ class DynaMaze:
                 _, max_a = self.greedy(rand_S_new, self.Q)
                 self.Q[rand_S[0]][rand_S[1]][rand_A] += self.alpha * (rand_R + self.gamma * self.fetch_Q(rand_S_new, max_a) - self.fetch_Q(rand_S, rand_A)) # (d)
         self.current_location = self.start_location.copy()
-        print(count)
+        return count
         
     def iterate(self, iteration):
+        accumulated_reward = []
+        sum_timestep = 0
+        accumulated_timestep = []
         for i in range(0,iteration):
-            self.run_Dyna_Q()
-        np.set_printoptions(precision=3, suppress=True)
-        print(self.Q)
-        # print(self.model)
+            count = self.run_Dyna_Q()
+            sum_timestep += count
+            if sum_timestep >= 1000:
+                self.current_map = self.next_map.copy()
+            accumulated_reward.append(i)
+            accumulated_timestep.append(sum_timestep)
+        self.draw_plot( accumulated_reward, accumulated_timestep)
+    
+    def draw_plot(self, accumulated_reward, accumulated_timestep):
+        plt.plot(accumulated_timestep, accumulated_reward)
+        plt.show()
             
-Dyna_Q = DynaMaze(map_choose=0, n=3)
-Dyna_Q.iterate(5)
+Dyna_Q = DynaMaze(n=10)
+Dyna_Q.iterate(80)
