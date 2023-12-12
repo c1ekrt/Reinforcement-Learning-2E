@@ -145,7 +145,9 @@ class DynaMaze:
         # np.set_printoptions(precision=3, suppress=True)
         # print(self.Q)
         # print(self.model)
-            
+
+# because the stochastic nature of the training progress, 
+# we simply observe how fast the algorithm converge to the right answer.(the incline of the learning progress)
 Dyna_Q = DynaMaze(map_choose=0, n=1)
 Dyna_Q.iterate(5)
 Dyna_Q = DynaMaze(map_choose=0, n=5)
