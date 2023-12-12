@@ -171,7 +171,10 @@ class DynaMaze:
                 for i in range(0, self.n):
                     _, S0, S1, A = list(PQueue)[0]
                     S = np.array([S0,S1])
-                    R, S_new = self.model[(tuple(S),A)]
+                    if self.model.get(tuple(S),A) == None:
+                        print(S,A)
+                        continue
+                    R, S_new = self.model.get((tuple(S),A))
                     S_new = np.array(list(S_new))
                     _, max_a = self.greedy(S_new, self.Q)
                     self.Q[S[0]][S[1]][A] += self.alpha * (R + self.gamma * self.fetch_Q(S_new, max_a) - self.fetch_Q(S, A))
@@ -197,6 +200,7 @@ class DynaMaze:
             accumulated_reward.append(i)
             accumulated_timestep.append(sum_timestep)
         self.draw_plot( accumulated_reward, accumulated_timestep, self.n, tag)
+        self.__init__(n=self.n)
         tag = "priortized_sweeping"
         accumulated_reward = [0]
         sum_timestep = 0
