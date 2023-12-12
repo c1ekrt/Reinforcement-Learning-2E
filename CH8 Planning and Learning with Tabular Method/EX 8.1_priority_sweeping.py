@@ -182,6 +182,8 @@ class DynaMaze:
         
     def draw_plot(self, accumulated_reward, accumulated_timestep, n, tag):
         plt.xscale('log')
+        plt.xlabel('update count')
+        plt.ylabel('cumulated reward')
         plt.plot(accumulated_timestep, accumulated_reward,label=f"n={n} {tag}", )
         
     def iterate(self, iteration):
@@ -210,15 +212,9 @@ class DynaMaze:
         # print(self.model)
 
 
-# because the stochastic nature of the training progress, 
-# we simply observe how fast the algorithm converge to the right answer.(the incline of the learning progress)
-# Dyna_Q = DynaMaze(map_choose=0, n=1)
-# Dyna_Q.iterate(5)
-Dyna_Q = DynaMaze(map_choose=0, n=5)
-Dyna_Q.iterate(200)
-# Dyna_Q = DynaMaze(map_choose=0, n=15)
-# Dyna_Q.iterate(5)
-# Dyna_Q = DynaMaze(map_choose=0, n=50)
-# Dyna_Q.iterate(5)
+
+test = DynaMaze(map_choose=0, n=5)
+test.iterate(150)
+
 plt.legend()
 plt.show()
