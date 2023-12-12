@@ -10,6 +10,7 @@ Tabular Dyna-Q with Dyna Maze
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import math
 
 class MazeMap:
     def __init__(self):
@@ -58,7 +59,9 @@ class DynaMaze:
         self.alpha = 0.1
         self.epsilon = 0.1
         self.gamma = 0.95
-        self.reward = 100
+        self.reward = 1
+        self.kappa = 0.001
+        self.elapsed_timestep = np.zeros((9,6,4))
         self.n = n
         
     def move(self, location, direction):
@@ -86,6 +89,12 @@ class DynaMaze:
             return 1.0
         else:
             return 0.0
+        
+    def update_and_fetch_elapsed_time(self, S, A):
+        tau_step = self.elapsed_timestep[S[0]][S[1]][A]
+        self.elapsed_timestep[S[0]][S[1]][A] = 0
+        self.elapsed_timestep += 1
+        return tau_step
         
     def epsilon_greedy(self, location, e, target_policy):
         rdfp = random.random()
@@ -135,6 +144,32 @@ class DynaMaze:
                 self.Q[rand_S[0]][rand_S[1]][rand_A] += self.alpha * (rand_R + self.gamma * self.fetch_Q(rand_S_new, max_a) - self.fetch_Q(rand_S, rand_A)) # (d)
         self.current_location = self.start_location.copy()
         return count
+    def run_Dyna_Q_plus(self):
+        count =0
+        while not (self.current_location == self.end_location).all():
+            count += 1
+            S = self.current_location.copy()                       # (a)
+            _, A = self.epsilon_greedy(S, self.epsilon, self.Q)     # (b)
+            S_new = self.move(self.current_location , A)    # (c)
+            R = self.R(S_new)
+            tau = self.update_and_fetch_elapsed_time(S, A)
+            R += self.kappa * math.sqrt(tau)
+            self.current_location = S_new.copy()
+            _, max_a = self.greedy(self.current_location, self.Q)
+            self.Q[S[0]][S[1]][A] += self.alpha * (R + self.gamma * self.fetch_Q(S_new, max_a) - self.fetch_Q(S, A)) # (d)
+            # Model(S,A) <- R,S'
+            self.model[(tuple(S),A)]=(R,tuple(S_new)) # (e)
+            for i in range(0, self.n):
+                rand_SA, rand_RS_new = random.choice(list(self.model.items()))
+                # print(rand_SA)
+                # print(rand_RS_new)
+                rand_S, rand_A = rand_SA[0],rand_SA[1]
+                rand_R, rand_S_new = rand_RS_new[0], rand_RS_new[1]
+                _, max_a = self.greedy(rand_S_new, self.Q)
+                self.Q[rand_S[0]][rand_S[1]][rand_A] += self.alpha * (rand_R + self.gamma * self.fetch_Q(rand_S_new, max_a) - self.fetch_Q(rand_S, rand_A)) # (d)
+        self.current_location = self.start_location.copy()
+        np.set_printoptions(precision=3, suppress=True)
+        return count
         
     def iterate(self, iteration):
         accumulated_reward = []
@@ -147,11 +182,30 @@ class DynaMaze:
                 self.current_map = self.next_map.copy()
             accumulated_reward.append(i)
             accumulated_timestep.append(sum_timestep)
-        self.draw_plot( accumulated_reward, accumulated_timestep)
-    
-    def draw_plot(self, accumulated_reward, accumulated_timestep):
-        plt.plot(accumulated_timestep, accumulated_reward)
-        plt.show()
+        self.draw_plot( accumulated_reward, accumulated_timestep, self.n)
+        # accumulated_reward = []
+        # sum_timestep = 0
+        # accumulated_timestep = []
+        # self.__init__(self.n)
+        # for i in range(0,iteration):
+        #     count = self.run_Dyna_Q_plus()
+        #     sum_timestep += count
+        #     if sum_timestep >= 1000:
+        #         self.current_map = self.next_map.copy()
+        #     accumulated_reward.append(i)
+        #     accumulated_timestep.append(sum_timestep)
+        # self.draw_plot( accumulated_reward, accumulated_timestep)
+    def draw_plot(self, accumulated_reward, accumulated_timestep, n):
+        plt.plot(accumulated_timestep, accumulated_reward,label=f"n={n}")
+        
             
-Dyna_Q = DynaMaze(n=10)
-Dyna_Q.iterate(80)
+Dyna_Q = DynaMaze(n=1)
+Dyna_Q.iterate(250)
+Dyna_Q.__init__(n=5)
+Dyna_Q.iterate(300)
+Dyna_Q.__init__(n=10)
+Dyna_Q.iterate(300)
+Dyna_Q.__init__(n=50)
+Dyna_Q.iterate(300)
+plt.legend()
+plt.show()

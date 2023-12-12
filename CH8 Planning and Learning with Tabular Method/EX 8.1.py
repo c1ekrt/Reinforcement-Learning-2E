@@ -9,6 +9,7 @@ Tabular Dyna-Q with Dyna Maze
 
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 class MazeMap:
     def __init__(self, map_choose):
@@ -126,14 +127,32 @@ class DynaMaze:
                 _, max_a = self.greedy(rand_S_new, self.Q)
                 self.Q[rand_S[0]][rand_S[1]][rand_A] += self.alpha * (rand_R + self.gamma * self.fetch_Q(rand_S_new, max_a) - self.fetch_Q(rand_S, rand_A)) # (d)
         self.current_location = self.start_location.copy()
-        print(count)
+        return count
+        
+    def draw_plot(self, accumulated_reward, accumulated_timestep, n):
+        plt.plot(accumulated_timestep, accumulated_reward,label=f"n={n}")
         
     def iterate(self, iteration):
+        accumulated_reward = [0]
+        sum_timestep = 0
+        accumulated_timestep = [0]
         for i in range(0,iteration):
-            self.run_Dyna_Q()
-        np.set_printoptions(precision=3, suppress=True)
-        print(self.Q)
+            timestep = self.run_Dyna_Q()
+            sum_timestep += timestep
+            accumulated_reward.append(i)
+            accumulated_timestep.append(sum_timestep)
+        self.draw_plot( accumulated_reward, accumulated_timestep, self.n)
+        # np.set_printoptions(precision=3, suppress=True)
+        # print(self.Q)
         # print(self.model)
             
-Dyna_Q = DynaMaze(map_choose=0, n=3)
+Dyna_Q = DynaMaze(map_choose=0, n=1)
 Dyna_Q.iterate(5)
+Dyna_Q = DynaMaze(map_choose=0, n=5)
+Dyna_Q.iterate(5)
+Dyna_Q = DynaMaze(map_choose=0, n=15)
+Dyna_Q.iterate(5)
+Dyna_Q = DynaMaze(map_choose=0, n=50)
+Dyna_Q.iterate(5)
+plt.legend()
+plt.show()
