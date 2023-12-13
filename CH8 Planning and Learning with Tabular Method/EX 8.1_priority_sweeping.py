@@ -117,12 +117,13 @@ class DynaMaze:
         for i, barS in enumerate(S_bar):
             if not (barS[0]<0 or barS[0]>=self.x_range or barS[1]<0 or barS[1]>=self.y_range):  # out of range
                 if not self.current_map[barS[0]][barS[1]] == 1:                             # wall
-                    _, max_a = self.greedy(barS, self.Q)
-                    if ((barS + self.direction[max_a]) == S).all():
+                    _, max_a_bar = self.greedy(barS, self.Q)
+                    if ((barS + self.direction[max_a_bar]) == S).all():
                         R = self.R(S)
-                        P = abs(R + self.gamma * self.fetch_Q(S, max_a) - self.fetch_Q(barS, A))
+                        _, max_a = self.greedy(S, self.Q)
+                        P = abs(R + self.gamma * self.fetch_Q(S, max_a) - self.fetch_Q(barS, max_a_bar))
                         if P > self.theta:
-                            PQueue.add((P, barS[0], barS[1], max_a))
+                            PQueue.add((P, barS[0], barS[1], max_a_bar))
     def run_Dyna_Q(self):
         count = 0
         update_count = 0
@@ -171,10 +172,9 @@ class DynaMaze:
                 for i in range(0, self.n):
                     _, S0, S1, A = list(PQueue)[0]
                     S = np.array([S0,S1])
-                    if self.model.get(tuple(S),A) == None:
-                        print(S,A)
+                    if self.model.get((tuple(S),A)) == None:
                         continue
-                    R, S_new = self.model.get((tuple(S),A))
+                    R, S_new = self.model[(tuple(S),A)]
                     S_new = np.array(list(S_new))
                     _, max_a = self.greedy(S_new, self.Q)
                     self.Q[S[0]][S[1]][A] += self.alpha * (R + self.gamma * self.fetch_Q(S_new, max_a) - self.fetch_Q(S, A))
@@ -200,8 +200,8 @@ class DynaMaze:
             accumulated_reward.append(i)
             accumulated_timestep.append(sum_timestep)
         self.draw_plot( accumulated_reward, accumulated_timestep, self.n, tag)
-        self.__init__(n=self.n)
         tag = "priortized_sweeping"
+        self.__init__(n=self.n)
         accumulated_reward = [0]
         sum_timestep = 0
         accumulated_timestep = [0]
@@ -218,7 +218,7 @@ class DynaMaze:
 
 
 test = DynaMaze(map_choose=0, n=5)
-test.iterate(150)
+test.iterate(80000)
 
 plt.legend()
 plt.show()
