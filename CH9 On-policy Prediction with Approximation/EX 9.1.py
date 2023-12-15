@@ -89,8 +89,8 @@ class RandomWalk:
         print(state)
         print(v_hat)
         plt.bar(state, v_hat, width=80)
-        # plt.xlabel("state")
-        # plt.ylabel("v_hat")
+        plt.xlabel("state")
+        plt.ylabel("Value Scale")
         # plt.legend()
         plt.show()
     
@@ -123,8 +123,8 @@ class RandomWalk:
         print(state)
         print(v_hat)
         plt.bar(state, v_hat, width=80)
-        # plt.xlabel("state")
-        # plt.ylabel("v_hat")
+        plt.xlabel("state")
+        plt.ylabel("Value Scale")
         # plt.legend()
         plt.show()
         
