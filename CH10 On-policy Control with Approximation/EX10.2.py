@@ -105,7 +105,7 @@ class AccessControlQingTask:
             for customer in range(0,4):
                 g.append(self.greedy((server,customer)))
             print(g)
-        print("Reject")
+        print("Rejected")
         print(self.w[:,:,0])
         print("Granted")
         print(self.w[:,:,1])
